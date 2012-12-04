@@ -23,7 +23,7 @@
     <div class="container-narrow">
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
-          <li class="active"><a href="/welcome">Home</a></li>
+          <li><a href="/welcome">Home</a></li>
           <li><a href="/beers">Beers</a></li>
           <li><a href="/breweries">Breweries</a></li>
           <li><a href="/map">Map</a></li>

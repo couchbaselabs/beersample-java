@@ -76,7 +76,7 @@ public class BreweryServlet extends HttpServlet {
 
     View view = client.getView("beer", "brewery_beers");
     Query query = new Query();
-    query.setStale(Stale.FALSE).setIncludeDocs(true);
+    query.setStale(Stale.FALSE).setIncludeDocs(true).setLimit(20);
     ViewResponse result = client.query(view, query);
 
     ArrayList<HashMap<String, String>> breweries =
