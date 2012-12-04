@@ -30,25 +30,49 @@ import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.spy.memcached.internal.OperationFuture;
 
-
+/**
+ * The BeerServlet handles all Beer-related HTTP Queries.
+ *
+ * The BeerServlet is used to handle all HTTP queries under the /beers
+ * namespace. The "web.xml" defines a wildcard route for every /beers/*
+ * route, so the doGet() method needs to determine what should be dispatched.
+ */
 public class BeerServlet extends HttpServlet {
 
+  /**
+   * Obtains the current CouchbaseClient connection.
+   */
   final CouchbaseClient client = ConnectionManager.getInstance();
+
+  /**
+   * Google GSON is used for JSON encoding/decoding.
+   */
   final Gson gson = new Gson();
 
+  /**
+   * Dispatch all incoming GET HTTP requests.
+   *
+   * Since the /beers/* routes are wildcarded and will all end up here, the
+   * method needs to check agains the PATH (through getPathInfo()) and
+   * determine which helper method should be called. The helper method then
+   * does the actual request and response handling.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws ServletException
+   * @throws IOException
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
@@ -69,6 +93,18 @@ public class BeerServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Handle the /beers action.
+   *
+   * Based on a defined Couchbase View (beer/brewery_beers), the beers are
+   * loaded, arranged and passed to the JSP layer. Google GSON is used to
+   * handle the JSON encoding/decoding.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
   private void handleIndex(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
 
@@ -99,6 +135,16 @@ public class BeerServlet extends HttpServlet {
       .forward(request, response);
   }
 
+  /**
+   * Handle the /beers/show/<BEER-ID> action
+   *
+   * This method loads up a document based on the given beer id.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
   private void handleShow(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
 
@@ -113,6 +159,18 @@ public class BeerServlet extends HttpServlet {
       .forward(request, response);
   }
 
+  /**
+   * Handle the /beers/delete/<BEER-ID> action
+   *
+   * This method deletes a beer based on the given beer id.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   * @throws InterruptedException
+   * @throws ExecutionException
+   */
   private void handleDelete(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException,
     InterruptedException,

@@ -31,12 +31,31 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+/**
+ * The ConnectionManager handles connecting, disconnecting and managing
+ * of the Couchbase connection.
+ *
+ * To get the connection from a Servlet context, use the getInstance()
+ * method.
+ */
 public class ConnectionManager implements ServletContextListener {
 
+  /**
+   * Holds the connected Couchbase instance.
+   */
   private static CouchbaseClient client;
+
+  /**
+   * The Logger to use.
+   */
   private static final Logger logger = Logger.getLogger(
     ConnectionManager.class.getName());
 
+  /**
+   * Connect to Couchbase when the Server starts.
+   *
+   * @param sce the ServletContextEvent (not used here).
+   */
   @Override
   public void contextInitialized(ServletContextEvent sce) {
     logger.log(Level.INFO, "Connecting to Couchbase Cluster");
@@ -49,12 +68,22 @@ public class ConnectionManager implements ServletContextListener {
     }
   }
 
+  /**
+   * Disconnect from Couchbase when the Server shuts down.
+   *
+   * @param sce the ServletContextEvent (not used here).
+   */
   @Override
   public void contextDestroyed(ServletContextEvent sce) {
     logger.log(Level.INFO, "Disconnecting from Couchbase Cluster");
     client.shutdown();
   }
 
+  /**
+   * Returns the current CouchbaseClient object.
+   *
+   * @return the current Couchbase connection.
+   */
   public static CouchbaseClient getInstance() {
     return client;
   }
