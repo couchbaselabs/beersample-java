@@ -81,8 +81,6 @@ public class BreweryServlet extends HttpServlet {
     try {
       if(request.getPathInfo() == null) {
         handleIndex(request, response);
-      } else if(request.getPathInfo().startsWith("/map")) {
-        handleMap(request, response);
       } else if(request.getPathInfo().startsWith("/show")) {
         handleShow(request, response);
       } else if(request.getPathInfo().startsWith("/delete")) {
@@ -183,23 +181,6 @@ public class BreweryServlet extends HttpServlet {
     if(delete.get()) {
       response.sendRedirect("/breweries");
     }
-  }
-
-  /**
-   * Handles /map JSON queries to display it on the map.
-   *
-   * @param request the HTTP request object.
-   * @param response the HTTP response object.
-   * @throws IOException
-   */
-  private void handleMap(HttpServletRequest request,
-    HttpServletResponse response) throws IOException {
-    // load spatial view. and return data
-
-    response.setContentType("application/json");
-    PrintWriter out = response.getWriter();
-    out.print("{}");
-    out.flush();
   }
 
   /**

@@ -26,7 +26,6 @@
           <li><a href="/welcome">Home</a></li>
           <li><a href="/beers">Beers</a></li>
           <li><a href="/breweries">Breweries</a></li>
-          <li><a href="/map">Map</a></li>
         </ul>
         <h2 class="muted">Couchbase Beer-Sample</h2>
       </div>
@@ -41,7 +40,6 @@
         <p>&copy; Couchbase, Inc. 2012</p>
       </div>
     </div>
-    <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
     <script src="/js/beersample.js"></script>

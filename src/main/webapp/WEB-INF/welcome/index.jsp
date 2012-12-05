@@ -12,11 +12,6 @@
           <div class="span12">
             <h4>Browse all Breweries</h4>
             <a href="/breweries" class="btn btn-info">Take me to the breweries</a>
-            <hr />
-          </div>
-          <div class="span12">
-            <h4>Find Breweries near you</h4>
-            <a href="/map" class="btn btn-success">Jump to the map</a>
           </div>
         </div>
         <div class="span6">
