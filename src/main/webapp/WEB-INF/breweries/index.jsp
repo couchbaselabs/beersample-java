@@ -21,9 +21,7 @@
                     <c:forEach items="${breweries}" var="brewery">
                         <tr>
                             <td><a href="/breweries/show/${brewery.id}">${brewery.name}</a></td>
-                            <td><a class="btn btn-small btn-warning"
-                                   href="/breweries/edit/${brewery.id}">Edit</a>
-                                <a class="btn btn-small btn-danger"
+                            <td><a class="btn btn-small btn-danger"
                                    href="/breweries/delete/${brewery.id}">Delete</a>
                             </td>
                         </tr>

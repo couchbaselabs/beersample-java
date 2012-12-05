@@ -35,7 +35,6 @@ $(document).ready(function() {
                    var html = "<tr>";
                    html += "<td><a href=\"/beers/show/"+data[i].id+"\">"+data[i].name+"</a></td>";
                    html += "<td>";
-                   html += "<a class=\"btn btn-small btn-warning\" href=\"/beers/edit/"+data[i].id+"\">Edit</a>\n";
                    html += "<a class=\"btn btn-small btn-danger\" href=\"/beers/delete/"+data[i].id+"\">Delete</a>";
                    html += "</td>";
                    html += "</tr>";

@@ -33,7 +33,8 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -86,6 +87,8 @@ public class BeerServlet extends HttpServlet {
         handleShow(request, response);
       } else if(request.getPathInfo().startsWith("/delete")) {
         handleDelete(request, response);
+      } else if(request.getPathInfo().startsWith("/edit")) {
+        handleEdit(request, response);
       } else if(request.getPathInfo().startsWith("/search")) {
         handleSearch(request, response);
       }
@@ -97,6 +100,38 @@ public class BeerServlet extends HttpServlet {
         Level.SEVERE, null, ex);
     }
   }
+
+  /**
+   * Store and validate the beer form.
+   *
+   * @param req
+   * @param resp
+   * @throws ServletException
+   * @throws IOException
+   */
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+
+    String beerId = request.getPathInfo().split("/")[2];
+    HashMap<String, String> beer = beer = new HashMap<String, String>();
+    Enumeration<String> params = request.getParameterNames();
+    while(params.hasMoreElements()) {
+      String key = params.nextElement();
+      if(!key.startsWith("beer_")) {
+        continue;
+      }
+      String value = request.getParameter(key);
+      beer.put(key.substring(5), value);
+    }
+
+    beer.put("type", "beer");
+    beer.put("updated", new Date().toString());
+
+    client.set(beerId, 0, gson.toJson(beer));
+    response.sendRedirect("/beers/show/" + beerId);
+  }
+
 
   /**
    * Handle the /beers action.
@@ -183,6 +218,28 @@ public class BeerServlet extends HttpServlet {
     if(delete.get()) {
       response.sendRedirect("/beers");
     }
+  }
+
+  private void handleEdit(HttpServletRequest request,
+    HttpServletResponse response) throws ServletException, IOException {
+
+    String[] beerId = request.getPathInfo().split("/");
+    if(beerId.length > 2) {
+      String document = (String) client.get(beerId[2]);
+
+      HashMap<String, String> beer = null;
+      if(document != null) {
+        beer = gson.fromJson(document, HashMap.class);
+        beer.put("id", beerId[2]);
+        request.setAttribute("beer", beer);
+      }
+      request.setAttribute("title", "Modify Beer \"" + beer.get("name") + "\"");
+    } else {
+      request.setAttribute("title", "Create a new beer");
+    }
+
+    request.getRequestDispatcher("/WEB-INF/beers/edit.jsp")
+      .forward(request, response);
   }
 
   /**
