@@ -4,7 +4,13 @@
 <t:layout>
     <jsp:body>
  <h3>Browse Breweries</h3>
-            <table class="table table-striped">
+
+     <form class="navbar-search pull-left">
+        <input id="brewery-search" type="text" class="search-query"
+               placeholder="Search for Breweries">
+    </form>
+
+            <table id="brewery-table" class="table table-striped">
                 <thead>
                     <tr>
                         <th>Name</th>

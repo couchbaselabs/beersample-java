@@ -23,6 +23,7 @@
 package com.couchbase.beersample;
 
 import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.protocol.views.ComplexKey;
 import com.couchbase.client.protocol.views.Query;
 import com.couchbase.client.protocol.views.Stale;
 import com.couchbase.client.protocol.views.View;
@@ -30,7 +31,9 @@ import com.couchbase.client.protocol.views.ViewResponse;
 import com.couchbase.client.protocol.views.ViewRow;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -83,6 +86,8 @@ public class BeerServlet extends HttpServlet {
         handleShow(request, response);
       } else if(request.getPathInfo().startsWith("/delete")) {
         handleDelete(request, response);
+      } else if(request.getPathInfo().startsWith("/search")) {
+        handleSearch(request, response);
       }
     } catch (InterruptedException ex) {
       Logger.getLogger(BeerServlet.class.getName()).log(
@@ -108,7 +113,7 @@ public class BeerServlet extends HttpServlet {
   private void handleIndex(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
 
-    View view = client.getView("beer", "brewery_beers");
+    View view = client.getView("beer", "by_name");
     Query query = new Query();
     query.setStale(Stale.FALSE).setIncludeDocs(true).setLimit(20);
     ViewResponse result = client.query(view, query);
@@ -116,18 +121,14 @@ public class BeerServlet extends HttpServlet {
     ArrayList<HashMap<String, String>> beers =
       new ArrayList<HashMap<String, String>>();
     for(ViewRow row : result) {
-      ArrayList<String> parsedKey = gson.fromJson(
-        row.getKey(), ArrayList.class);
       HashMap<String, String> parsedDoc = gson.fromJson(
         (String)row.getDocument(), HashMap.class);
 
-      if(parsedKey.size() == 2) {
-        HashMap<String, String> beer = new HashMap<String, String>();
-        beer.put("id", row.getId());
-        beer.put("name", parsedDoc.get("name"));
-        beer.put("brewery", parsedDoc.get("brewery_id"));
-        beers.add(beer);
-      }
+      HashMap<String, String> beer = new HashMap<String, String>();
+      beer.put("id", row.getId());
+      beer.put("name", parsedDoc.get("name"));
+      beer.put("brewery", parsedDoc.get("brewery_id"));
+      beers.add(beer);
     }
     request.setAttribute("beers", beers);
 
@@ -182,6 +183,53 @@ public class BeerServlet extends HttpServlet {
     if(delete.get()) {
       response.sendRedirect("/beers");
     }
+  }
+
+  /**
+   * Handle the /beers/search action.
+   *
+   * Based on a defined Couchbase View (beer/by_name), the beers are
+   * loaded, arranged and passed as JSON to be used by the javascript layer.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
+  private void handleSearch(HttpServletRequest request,
+    HttpServletResponse response) throws IOException, ServletException {
+
+    String startKey = request.getParameter("value").toLowerCase();
+
+    View view = client.getView("beer", "by_name");
+    Query query = new Query();
+
+
+    query.setStale(Stale.FALSE)
+      .setIncludeDocs(true)
+      .setLimit(20)
+      .setRangeStart(ComplexKey.of(startKey))
+      .setRangeEnd(ComplexKey.of(startKey + "\uefff"));
+    System.out.println(query);
+    ViewResponse result = client.query(view, query);
+
+    ArrayList<HashMap<String, String>> beers =
+      new ArrayList<HashMap<String, String>>();
+    for(ViewRow row : result) {
+      HashMap<String, String> parsedDoc = gson.fromJson(
+        (String)row.getDocument(), HashMap.class);
+
+        HashMap<String, String> beer = new HashMap<String, String>();
+        beer.put("id", row.getId());
+        beer.put("name", parsedDoc.get("name"));
+        beer.put("brewery", parsedDoc.get("brewery_id"));
+        beers.add(beer);
+    }
+
+    response.setContentType("application/json");
+    PrintWriter out = response.getWriter();
+    out.print(gson.toJson(beers));
+    out.flush();
   }
 
 }

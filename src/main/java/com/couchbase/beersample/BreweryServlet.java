@@ -23,6 +23,7 @@
 package com.couchbase.beersample;
 
 import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.protocol.views.ComplexKey;
 import com.couchbase.client.protocol.views.Query;
 import com.couchbase.client.protocol.views.Stale;
 import com.couchbase.client.protocol.views.View;
@@ -42,12 +43,38 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.spy.memcached.internal.OperationFuture;
 
-
+/**
+ * The BreweryServlet handles all Brewery-related HTTP Queries.
+ *
+ * The BreweryServlet is used to handle all HTTP queries under the /breweries
+ * namespace. The "web.xml" defines a wildcard route for every /breweries/*
+ * route, so the doGet() method needs to determine what should be dispatched.
+ */
 public class BreweryServlet extends HttpServlet {
 
+  /**
+   * Obtains the current CouchbaseClient connection.
+   */
   final CouchbaseClient client = ConnectionManager.getInstance();
+
+  /**
+   * Google GSON is used for JSON encoding/decoding.
+   */
   final Gson gson = new Gson();
 
+  /**
+   * Dispatch all incoming GET HTTP requests.
+   *
+   * Since the /breweries/* routes are wildcarded and will all end up here, the
+   * method needs to check agains the PATH (through getPathInfo()) and
+   * determine which helper method should be called. The helper method then
+   * does the actual request and response handling.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws ServletException
+   * @throws IOException
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
@@ -60,6 +87,8 @@ public class BreweryServlet extends HttpServlet {
         handleShow(request, response);
       } else if(request.getPathInfo().startsWith("/delete")) {
         handleDelete(request, response);
+      } else if(request.getPathInfo().startsWith("/search")) {
+        handleSearch(request, response);
       }
     } catch (InterruptedException ex) {
       Logger.getLogger(BreweryServlet.class.getName()).log(
@@ -70,10 +99,22 @@ public class BreweryServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Handle the /breweries action.
+   *
+   * Based on a defined Couchbase View (beer/brewery_beers), the breweries are
+   * loaded, arranged and passed to the JSP layer. Google GSON is used to
+   * handle the JSON encoding/decoding.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
   private void handleIndex(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
 
-    View view = client.getView("beer", "brewery_beers");
+    View view = client.getView("brewery", "by_name");
     Query query = new Query();
     query.setStale(Stale.FALSE).setIncludeDocs(true).setLimit(20);
     ViewResponse result = client.query(view, query);
@@ -81,17 +122,13 @@ public class BreweryServlet extends HttpServlet {
     ArrayList<HashMap<String, String>> breweries =
       new ArrayList<HashMap<String, String>>();
     for(ViewRow row : result) {
-      ArrayList<String> parsedKey = gson.fromJson(
-        row.getKey(), ArrayList.class);
       HashMap<String, String> parsedDoc = gson.fromJson(
         (String)row.getDocument(), HashMap.class);
 
-      if(parsedKey.size() == 1) {
-        HashMap<String, String> brewery = new HashMap<String, String>();
-        brewery.put("id", row.getId());
-        brewery.put("name", parsedDoc.get("name"));
-        breweries.add(brewery);
-      }
+      HashMap<String, String> brewery = new HashMap<String, String>();
+      brewery.put("id", row.getId());
+      brewery.put("name", parsedDoc.get("name"));
+      breweries.add(brewery);
     }
     request.setAttribute("breweries", breweries);
 
@@ -99,6 +136,16 @@ public class BreweryServlet extends HttpServlet {
       .forward(request, response);
   }
 
+  /**
+   * Handle the /breweries/show/<BREWERY-ID> action
+   *
+   * This method loads up a document based on the given brewery id.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
   private void handleShow(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
 
@@ -113,6 +160,18 @@ public class BreweryServlet extends HttpServlet {
       .forward(request, response);
   }
 
+  /**
+   * Handle the /breweries/delete/<BREWERY-ID> action
+   *
+   * This method deletes a brewery based on the given brewery id.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   * @throws InterruptedException
+   * @throws ExecutionException
+   */
   private void handleDelete(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException,
     InterruptedException,
@@ -126,6 +185,13 @@ public class BreweryServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Handles /map JSON queries to display it on the map.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   */
   private void handleMap(HttpServletRequest request,
     HttpServletResponse response) throws IOException {
     // load spatial view. and return data
@@ -133,6 +199,52 @@ public class BreweryServlet extends HttpServlet {
     response.setContentType("application/json");
     PrintWriter out = response.getWriter();
     out.print("{}");
+    out.flush();
+  }
+
+  /**
+   * Handle the /breweries/search action.
+   *
+   * Based on a defined Couchbase View (breweries/by_name), the breweries are
+   * loaded, arranged and passed as JSON to be used by the javascript layer.
+   *
+   * @param request the HTTP request object.
+   * @param response the HTTP response object.
+   * @throws IOException
+   * @throws ServletException
+   */
+  private void handleSearch(HttpServletRequest request,
+    HttpServletResponse response) throws IOException, ServletException {
+
+    String startKey = request.getParameter("value").toLowerCase();
+
+    View view = client.getView("brewery", "by_name");
+    Query query = new Query();
+
+
+    query.setStale(Stale.FALSE)
+      .setIncludeDocs(true)
+      .setLimit(20)
+      .setRangeStart(ComplexKey.of(startKey))
+      .setRangeEnd(ComplexKey.of(startKey + "\uefff"));
+    System.out.println(query);
+    ViewResponse result = client.query(view, query);
+
+    ArrayList<HashMap<String, String>> breweries =
+      new ArrayList<HashMap<String, String>>();
+    for(ViewRow row : result) {
+      HashMap<String, String> parsedDoc = gson.fromJson(
+        (String)row.getDocument(), HashMap.class);
+
+        HashMap<String, String> brewery = new HashMap<String, String>();
+        brewery.put("id", row.getId());
+        brewery.put("name", parsedDoc.get("name"));
+        breweries.add(brewery);
+    }
+
+    response.setContentType("application/json");
+    PrintWriter out = response.getWriter();
+    out.print(gson.toJson(breweries));
     out.flush();
   }
 

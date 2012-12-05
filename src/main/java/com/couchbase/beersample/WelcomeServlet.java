@@ -22,7 +22,6 @@
 
 package com.couchbase.beersample;
 
-import com.couchbase.client.CouchbaseClient;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -48,11 +47,6 @@ public class WelcomeServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-
-    CouchbaseClient client = ConnectionManager.getInstance();
-
-
-
     request.getRequestDispatcher("/WEB-INF/welcome/index.jsp")
       .forward(request, response);
   }
