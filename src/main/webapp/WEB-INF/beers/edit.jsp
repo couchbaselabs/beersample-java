@@ -32,7 +32,7 @@
                       <label>Alcohol (ABV)</label>
                       <input type="text" name="beer_abv" placeholder="The beer's ABV" value="${beer.abv}">
 
-                      <label>Biterness (IBU)</label>
+                      <label>Bitterness (IBU)</label>
                       <input type="text" name="beer_ibu" placeholder="The beer's IBU" value="${beer.ibu}">
                     </div>
                     <div class="span6">
