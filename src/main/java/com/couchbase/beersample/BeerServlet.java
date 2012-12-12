@@ -150,7 +150,7 @@ public class BeerServlet extends HttpServlet {
 
     View view = client.getView("beer", "by_name");
     Query query = new Query();
-    query.setStale(Stale.FALSE).setIncludeDocs(true).setLimit(20);
+    query.setIncludeDocs(true).setLimit(20);
     ViewResponse result = client.query(view, query);
 
     ArrayList<HashMap<String, String>> beers =
@@ -262,8 +262,7 @@ public class BeerServlet extends HttpServlet {
     Query query = new Query();
 
 
-    query.setStale(Stale.FALSE)
-      .setIncludeDocs(true)
+    query.setIncludeDocs(true)
       .setLimit(20)
       .setRangeStart(ComplexKey.of(startKey))
       .setRangeEnd(ComplexKey.of(startKey + "\uefff"));
