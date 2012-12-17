@@ -14,11 +14,23 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+      <repository>
+        <id>couchbase</id>
+        <name>Couchbase Maven Repository</name>
+        <layout>default</layout>
+        <url>http://files.couchbase.com/maven2/</url>
+        <snapshots>
+          <enabled>false</enabled>
+        </snapshots>
+      </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>couchbase</groupId>
             <artifactId>couchbase-client</artifactId>
-            <version>1.1-beta</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
