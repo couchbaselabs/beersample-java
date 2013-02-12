@@ -1,0 +1,4 @@
+Dummy file to let Jetty use the welcome servlet in the welcome-list
+http://docs.codehaus.org/display/JETTY/Welcome+files+not+working
+using a dummy file is a simpler workaround
+
