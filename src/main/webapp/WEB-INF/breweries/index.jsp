@@ -18,11 +18,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <c:forEach items="${breweries}" var="brewery">
+                    <c:forEach items="${breweries}" var="items">
                         <tr>
-                            <td><a href="/breweries/show/${brewery.id}">${brewery.name}</a></td>
+                            <td><a href="/breweries/show/${items.id}">${items.name}</a></td>
                             <td><a class="btn btn-small btn-danger"
-                                   href="/breweries/delete/${brewery.id}">Delete</a>
+                                   href="/breweries/delete/${items.id}">Delete</a>
                             </td>
                         </tr>
                       </c:forEach>
