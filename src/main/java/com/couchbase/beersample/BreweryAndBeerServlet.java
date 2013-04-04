@@ -2,10 +2,7 @@ package com.couchbase.beersample;
 
 
 import com.couchbase.client.CouchbaseClient;
-import com.couchbase.client.protocol.views.Query;
-import com.couchbase.client.protocol.views.View;
-import com.couchbase.client.protocol.views.ViewResponse;
-import com.couchbase.client.protocol.views.ViewRow;
+import com.couchbase.client.protocol.views.*;
 import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
@@ -56,29 +53,33 @@ public class BreweryAndBeerServlet extends HttpServlet {
     }
 
     private void handleIndex(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        View view = client.getView("brewery", "all_with_beers");
-        Query query = new Query();
-        query.setIncludeDocs(true).setLimit(100);
-        ViewResponse result = client.query(view, query);
+        try {
+            View view = client.getView("brewery", "all_with_beers");
+            Query query = new Query();
+            query.setIncludeDocs(true).setLimit(100);
+            ViewResponse result = client.query(view, query);
 
-        ArrayList<HashMap<String, String>> items =
-                new ArrayList<HashMap<String, String>>();
-        for(ViewRow row : result) {
-            HashMap<String, String> parsedDoc = gson.fromJson(
-                    (String)row.getDocument(), HashMap.class);
+            ArrayList<HashMap<String, String>> items =
+                    new ArrayList<HashMap<String, String>>();
+            for (ViewRow row : result) {
+                HashMap<String, String> parsedDoc = gson.fromJson(
+                        (String) row.getDocument(), HashMap.class);
 
-            HashMap<String, String> item = new HashMap<String, String>();
-            item.put("id", row.getId());
-            item.put("name", parsedDoc.get("name"));
-            item.put("type", parsedDoc.get("type"));
+                HashMap<String, String> item = new HashMap<String, String>();
+                item.put("id", row.getId());
+                item.put("name", parsedDoc.get("name"));
+                item.put("type", parsedDoc.get("type"));
 
 
-            items.add(item);
+                items.add(item);
+            }
+            request.setAttribute("items", items);
+
+            request.getRequestDispatcher("/WEB-INF/breweries/all.jsp")
+                    .forward(request, response);
+        } catch (InvalidViewException e) {
+            response.getWriter().print( InstallViewServlet.printNoViewMessage() );
         }
-        request.setAttribute("items", items);
-
-        request.getRequestDispatcher("/WEB-INF/breweries/all.jsp")
-                .forward(request, response);
     }
 
 
