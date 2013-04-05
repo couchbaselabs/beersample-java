@@ -19,6 +19,11 @@
                 <a href="/all" class="btn btn-primary">Take me to the all records</a>
                 <hr/>
             </div>
+            <div class="span12">
+                <h4>Search Beer Database</h4>
+                <a href="/search" class="btn btn-primary">Generic search</a>
+                <hr/>
+            </div>
         </div>
         <div class="span6">
             <div class="span12">
