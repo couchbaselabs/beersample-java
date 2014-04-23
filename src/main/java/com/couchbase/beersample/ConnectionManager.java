@@ -58,9 +58,10 @@ public class ConnectionManager implements ServletContextListener {
    */
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    logger.log(Level.INFO, "Connecting to Couchbase Cluster");
+    String cluster = System.getProperty("com.couchbase.beersample.cluster", "http://127.0.0.1:8091/pools");
+    logger.log(Level.INFO, String.format("Connecting to Couchbase Cluster [%s]", cluster));
     ArrayList<URI> nodes = new ArrayList<URI>();
-    nodes.add(URI.create(System.getProperty("com.couchbase.beersample.cluster", "http://127.0.0.1:8091/pools")));
+    nodes.add(URI.create(cluster));
     try {
       client = new CouchbaseClient(nodes, "beer-sample", "");
     } catch (IOException ex) {
