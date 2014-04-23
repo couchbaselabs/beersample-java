@@ -49,9 +49,11 @@ Clone this repo:
     Resolving deltas: 100% (51/51), done.
     $ cd beersample-java
 
-Run the application using jetty container:
+Run the application using jetty container. The -D option is optional
+and may be used to connect to a cluster running elsewhere (or a
+nonstandard port):
 
-    $ mvn jetty:run
+    $ mvn [-D com.couchbase.beersample.cluster=http://127.0.0.1:8091/pools] jetty:run
     .... snip ....
     Dec 17, 2012 1:50:16 PM com.couchbase.beersample.ConnectionManager contextInitialized
     INFO: Connecting to Couchbase Cluster
