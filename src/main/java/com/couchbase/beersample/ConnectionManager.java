@@ -23,6 +23,9 @@
 package com.couchbase.beersample;
 
 import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.protocol.views.DesignDocument;
+import com.couchbase.client.protocol.views.ViewDesign;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -51,6 +54,14 @@ public class ConnectionManager implements ServletContextListener {
   private static final Logger logger = Logger.getLogger(
     ConnectionManager.class.getName());
 
+  private DesignDocument getDesignDocument(String name) {
+    try {
+        return client.getDesignDoc(name);
+    } catch (com.couchbase.client.protocol.views.InvalidViewException e) {
+        return new DesignDocument(name);
+    }
+  }
+
   /**
    * Connect to Couchbase when the Server starts.
    *
@@ -58,13 +69,58 @@ public class ConnectionManager implements ServletContextListener {
    */
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    logger.log(Level.INFO, "Connecting to Couchbase Cluster");
+    String cluster = System.getProperty("com.couchbase.beersample.cluster", "http://127.0.0.1:8091/pools");
+    logger.log(Level.INFO, String.format("Connecting to Couchbase Cluster [%s]", cluster));
     ArrayList<URI> nodes = new ArrayList<URI>();
-    nodes.add(URI.create(System.getProperty("com.couchbase.beersample.cluster", "http://127.0.0.1:8091/pools")));
+    nodes.add(URI.create(cluster));
     try {
       client = new CouchbaseClient(nodes, "beer-sample", "");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, ex.getMessage());
+    }
+
+    logger.log(Level.INFO, "Trying to verify the views");
+    try {
+        DesignDocument designDoc = getDesignDocument("beer");
+        boolean found = false;
+        for (ViewDesign view : designDoc.getViews()) {
+            if (view.getMap() == "by_name") {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            ViewDesign design = new ViewDesign("by_name", "function (doc, meta) {\n" +
+                    "  if(doc.type && doc.type == \"beer\") {\n" +
+                    "    emit(doc.name, null);\n" +
+                    "  }\n" +
+                    "}");
+            designDoc.getViews().add(design);
+            client.createDesignDoc(designDoc);
+        }
+
+        designDoc = getDesignDocument("brewery");
+        found = false;
+        for (ViewDesign view : designDoc.getViews()) {
+            if (view.getMap() == "by_name") {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            ViewDesign design = new ViewDesign("by_name", "function (doc, meta) {\n" +
+                    "  if(doc.type && doc.type == \"brewery\") {\n" +
+                    "    emit(doc.name, null);\n" +
+                    "  }\n" +
+                    "}");
+            designDoc.getViews().add(design);
+            client.createDesignDoc(designDoc);
+        }
+    } catch (Exception e) {
+        logger.log(Level.WARNING, "An error occurred", e);
+
     }
   }
 
