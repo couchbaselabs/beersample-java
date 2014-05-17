@@ -23,12 +23,7 @@
 package com.couchbase.beersample;
 
 import com.couchbase.client.CouchbaseClient;
-import com.couchbase.client.protocol.views.ComplexKey;
-import com.couchbase.client.protocol.views.Query;
-import com.couchbase.client.protocol.views.Stale;
-import com.couchbase.client.protocol.views.View;
-import com.couchbase.client.protocol.views.ViewResponse;
-import com.couchbase.client.protocol.views.ViewRow;
+import com.couchbase.client.protocol.views.*;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -111,27 +106,31 @@ public class BreweryServlet extends HttpServlet {
    */
   private void handleIndex(HttpServletRequest request,
     HttpServletResponse response) throws IOException, ServletException {
+      try {
+          View view = client.getView("brewery", "by_name");
+          Query query = new Query();
+          query.setIncludeDocs(true).setLimit(20);
+          ViewResponse result = client.query(view, query);
 
-    View view = client.getView("brewery", "by_name");
-    Query query = new Query();
-    query.setIncludeDocs(true).setLimit(20);
-    ViewResponse result = client.query(view, query);
+          ArrayList<HashMap<String, String>> breweries =
+                  new ArrayList<HashMap<String, String>>();
+          for (ViewRow row : result) {
+              HashMap<String, String> parsedDoc = gson.fromJson(
+                      (String) row.getDocument(), HashMap.class);
 
-    ArrayList<HashMap<String, String>> breweries =
-      new ArrayList<HashMap<String, String>>();
-    for(ViewRow row : result) {
-      HashMap<String, String> parsedDoc = gson.fromJson(
-        (String)row.getDocument(), HashMap.class);
+              HashMap<String, String> brewery = new HashMap<String, String>();
+              brewery.put("id", row.getId());
+              brewery.put("name", parsedDoc.get("name"));
+              breweries.add(brewery);
+          }
+          request.setAttribute("breweries", breweries);
 
-      HashMap<String, String> brewery = new HashMap<String, String>();
-      brewery.put("id", row.getId());
-      brewery.put("name", parsedDoc.get("name"));
-      breweries.add(brewery);
-    }
-    request.setAttribute("breweries", breweries);
+          request.getRequestDispatcher("/WEB-INF/breweries/index.jsp")
+                  .forward(request, response);
 
-    request.getRequestDispatcher("/WEB-INF/breweries/index.jsp")
-      .forward(request, response);
+      } catch (InvalidViewException e) {
+          response.getWriter().print(InstallViewServlet.printNoViewMessage());
+      }
   }
 
   /**

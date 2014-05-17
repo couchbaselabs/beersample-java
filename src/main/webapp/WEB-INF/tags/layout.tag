@@ -25,7 +25,8 @@
         <ul class="nav nav-pills pull-right">
           <li><a href="/welcome">Home</a></li>
           <li><a href="/beers">Beers</a></li>
-          <li><a href="/breweries">Breweries</a></li>
+            <li><a href="/breweries">Breweries</a></li>
+            <li><a href="/all">All</a></li>
         </ul>
         <h2 class="muted">Couchbase Beer-Sample</h2>
       </div>
